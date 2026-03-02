@@ -203,39 +203,43 @@ export default function NewPollPage() {
   }
 
   return (
-    <div className="max-w-2xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href="/polls"
-          className="inline-flex items-center gap-2 text-brand-mid-grey hover:text-brand-dark-grey mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to polls
-        </Link>
-        <h1 className="text-3xl font-bold text-brand-black">Create New Poll</h1>
-        <p className="text-brand-mid-grey mt-1">
-          Set up your poll with one or more questions
-        </p>
+    <div className="max-w-2xl mx-auto">
+      {/* Page Header */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <Link
+            href="/polls"
+            className="inline-flex items-center gap-1.5 text-brand-mid-grey hover:text-brand-dark-grey text-sm mb-3 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to polls
+          </Link>
+          <h1 className="text-2xl font-bold text-brand-black">Create New Poll</h1>
+          <p className="text-brand-mid-grey text-sm mt-1">
+            Build your poll, add questions, and share with customers
+          </p>
+        </div>
+        {/* Question count indicator */}
+        <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-brand-light-mauve rounded-xl">
+          <span className="text-sm font-medium text-brand-indigo">
+            {questions.length} question{questions.length !== 1 ? "s" : ""}
+          </span>
+        </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-          {error}
-        </div>
-      )}
-
       {/* Form */}
-      <form action={handleSubmit} className="space-y-6">
-        {/* Poll Title */}
-        <div className="bg-white rounded-2xl shadow-sm border border-brand-light-grey/50 p-6">
-          <div className="space-y-2">
+      <form action={handleSubmit} className="space-y-5">
+        {/* Poll Details Card */}
+        <div className="bg-white rounded-2xl border border-brand-light-grey/50 shadow-sm p-6">
+          <p className="text-xs font-semibold text-brand-mid-grey uppercase tracking-wider mb-4">
+            Poll Details
+          </p>
+          <div>
             <label
               htmlFor="title"
-              className="block text-sm font-medium text-brand-dark-grey"
+              className="block text-sm font-semibold text-brand-dark-grey mb-1.5"
             >
-              Poll Title
+              Poll Title <span className="text-brand-coral">*</span>
             </label>
             <input
               id="title"
@@ -243,93 +247,107 @@ export default function NewPollPage() {
               type="text"
               required
               onChange={() => setIsDirty(true)}
-              className="w-full px-4 py-3 border border-brand-light-grey rounded-xl focus:ring-2 focus:ring-brand-coral focus:border-brand-coral transition-colors"
-              placeholder="e.g., Customer Satisfaction Survey"
+              className="w-full px-4 py-3 bg-brand-alabaster border border-brand-light-grey rounded-xl text-brand-black placeholder:text-brand-mid-grey focus:outline-none focus:ring-2 focus:ring-brand-coral/30 focus:border-brand-coral transition-all text-sm"
+              placeholder="e.g., Customer Satisfaction Q4 2025"
             />
-            <p className="text-sm text-brand-mid-grey">
-              This will be shown to voters as the poll name
+            <p className="text-xs text-brand-mid-grey mt-1.5">
+              This is the title customers see before they vote.
             </p>
           </div>
         </div>
 
-        {/* Questions */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-brand-black">
-              Questions ({questions.length})
-            </h2>
+        {/* Questions Section */}
+        <div className="space-y-3">
+          {/* Section header row */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-bold text-brand-black">Questions</h2>
+              <p className="text-xs text-brand-mid-grey mt-0.5">
+                {questions.length} of 10 questions added
+              </p>
+            </div>
             <button
               type="button"
               onClick={addQuestion}
-              className="flex items-center gap-2 text-brand-coral hover:text-brand-indigo font-medium text-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-light-mauve text-brand-indigo rounded-xl text-sm font-semibold hover:bg-brand-indigo hover:text-white transition-all duration-200"
             >
               <Plus className="w-4 h-4" />
               Add Question
             </button>
           </div>
 
+          {/* Question cards */}
           {questions.map((question, qIndex) => (
             <div
               key={question.id}
-              className="bg-white rounded-2xl shadow-sm border border-brand-light-grey/50 overflow-hidden"
+              className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${
+                question.isExpanded
+                  ? "border-brand-coral/30 shadow-md"
+                  : "border-brand-light-grey/50"
+              }`}
             >
-              {/* Question Header */}
+              {/* Question card header */}
               <div
-                className="flex items-center justify-between p-4 bg-brand-alabaster cursor-pointer"
                 onClick={() => toggleQuestion(qIndex)}
+                className="flex items-center gap-3 p-4 cursor-pointer hover:bg-brand-alabaster transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 flex items-center justify-center bg-brand-light-orange text-brand-coral rounded-lg text-sm font-bold">
-                    {qIndex + 1}
-                  </span>
-                  <span className="font-medium text-brand-dark-grey">
-                    {question.question_text || `Question ${qIndex + 1}`}
-                  </span>
+                {/* Number badge */}
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-indigo to-brand-coral flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  {qIndex + 1}
                 </div>
-                <div className="flex items-center gap-2">
-                  {questions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeQuestion(qIndex);
-                      }}
-                      className="p-1.5 text-brand-mid-grey hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                  {question.isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-brand-mid-grey" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-brand-mid-grey" />
-                  )}
-                </div>
+                {/* Title */}
+                <span className="flex-1 text-sm font-medium text-brand-dark-grey truncate">
+                  {question.question_text || `Question ${qIndex + 1} — click to expand`}
+                </span>
+                {/* Option count */}
+                <span className="text-xs text-brand-mid-grey mr-2">
+                  {question.options.length} options
+                </span>
+                {/* Remove button */}
+                {questions.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeQuestion(qIndex);
+                    }}
+                    className="p-1.5 text-brand-mid-grey hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                {/* Expand icon */}
+                {question.isExpanded ? (
+                  <ChevronUp className="w-4 h-4 text-brand-mid-grey" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-brand-mid-grey" />
+                )}
               </div>
 
-              {/* Question Content */}
+              {/* Expanded question body */}
               {question.isExpanded && (
-                <div className="p-6 space-y-4">
-                  {/* Question Text */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-brand-dark-grey">
-                      Question Text
+                <div className="p-5 pt-0 space-y-5 border-t border-brand-light-grey/50">
+                  {/* Question text */}
+                  <div className="pt-5">
+                    <label className="block text-xs font-semibold text-brand-mid-grey uppercase tracking-wide mb-1.5">
+                      Question
                     </label>
                     <textarea
                       value={question.question_text}
-                      onChange={(e) =>
-                        updateQuestionText(qIndex, e.target.value)
-                      }
+                      onChange={(e) => updateQuestionText(qIndex, e.target.value)}
                       rows={2}
-                      className="w-full px-4 py-3 border border-brand-light-grey rounded-xl focus:ring-2 focus:ring-brand-coral focus:border-brand-coral transition-colors resize-none"
-                      placeholder="e.g., How satisfied are you with our service?"
+                      className="w-full px-4 py-3 bg-brand-alabaster border border-brand-light-grey rounded-xl text-brand-black placeholder:text-brand-mid-grey focus:outline-none focus:ring-2 focus:ring-brand-coral/30 focus:border-brand-coral transition-all text-sm resize-none"
+                      placeholder="e.g., How would you rate your overall experience?"
                     />
                   </div>
 
-                  {/* Question Description */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-brand-dark-grey">
-                      Description (optional)
+                  {/* Description */}
+                  <div>
+                    <label className="block text-xs font-semibold text-brand-mid-grey uppercase tracking-wide mb-1.5">
+                      Description{" "}
+                      <span className="font-normal text-brand-mid-grey normal-case">
+                        (optional)
+                      </span>
                     </label>
                     <textarea
                       value={question.description}
@@ -337,48 +355,56 @@ export default function NewPollPage() {
                         updateQuestionDescription(qIndex, e.target.value)
                       }
                       rows={2}
-                      className="w-full px-4 py-3 border border-brand-light-grey rounded-xl focus:ring-2 focus:ring-brand-coral focus:border-brand-coral transition-colors resize-none"
+                      className="w-full px-4 py-3 bg-brand-alabaster border border-brand-light-grey rounded-xl text-brand-black placeholder:text-brand-mid-grey focus:outline-none focus:ring-2 focus:ring-brand-coral/30 focus:border-brand-coral transition-all text-sm resize-none"
                       placeholder="Add more context for this question..."
                     />
                   </div>
 
                   {/* Options */}
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-brand-dark-grey">
-                      Answer Options
-                    </label>
-                    {question.options.map((option, oIndex) => (
-                      <div key={option.id} className="flex items-center gap-2">
-                        <span className="w-8 h-8 flex items-center justify-center bg-brand-light-mauve rounded-lg text-sm font-medium text-brand-mid-grey">
-                          {oIndex + 1}
-                        </span>
-                        <input
-                          type="text"
-                          value={option.text}
-                          onChange={(e) =>
-                            updateOption(qIndex, oIndex, e.target.value)
-                          }
-                          className="flex-1 px-4 py-2.5 border border-brand-light-grey rounded-xl focus:ring-2 focus:ring-brand-coral focus:border-brand-coral transition-colors"
-                          placeholder={`Option ${oIndex + 1}`}
-                        />
-                        {question.options.length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() => removeOption(qIndex, oIndex)}
-                            className="p-2 text-brand-mid-grey hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-semibold text-brand-mid-grey uppercase tracking-wide">
+                        Answer Options
+                      </label>
+                      <span className="text-xs text-brand-mid-grey">
+                        {question.options.length}/10
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {question.options.map((option, oIndex) => (
+                        <div key={option.id} className="flex items-center gap-2">
+                          {/* Letter badge A, B, C… */}
+                          <span className="w-8 h-8 flex items-center justify-center bg-brand-light-mauve text-brand-indigo rounded-lg text-sm font-bold flex-shrink-0">
+                            {String.fromCharCode(65 + oIndex)}
+                          </span>
+                          <input
+                            type="text"
+                            value={option.text}
+                            onChange={(e) =>
+                              updateOption(qIndex, oIndex, e.target.value)
+                            }
+                            className="flex-1 px-3.5 py-2.5 bg-brand-alabaster border border-brand-light-grey rounded-xl text-sm text-brand-black placeholder:text-brand-mid-grey focus:outline-none focus:ring-2 focus:ring-brand-coral/30 focus:border-brand-coral transition-all"
+                            placeholder={`Option ${String.fromCharCode(65 + oIndex)}`}
+                          />
+                          {question.options.length > 2 && (
+                            <button
+                              type="button"
+                              onClick={() => removeOption(qIndex, oIndex)}
+                              className="p-2 text-brand-mid-grey hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                     {question.options.length < 10 && (
                       <button
                         type="button"
                         onClick={() => addOption(qIndex)}
-                        className="flex items-center gap-2 text-brand-coral hover:text-brand-indigo font-medium text-sm"
+                        className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-brand-coral hover:text-brand-indigo transition-colors"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-3.5 h-3.5" />
                         Add option
                       </button>
                     )}
@@ -389,47 +415,67 @@ export default function NewPollPage() {
           ))}
         </div>
 
-        {/* Settings */}
-        <div className="bg-white rounded-2xl shadow-sm border border-brand-light-grey/50 p-6">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              name="showResults"
-              defaultChecked
-              className="w-5 h-5 rounded border-brand-light-grey text-brand-coral focus:ring-brand-coral"
-            />
+        {/* Settings Card */}
+        <div className="bg-white rounded-2xl border border-brand-light-grey/50 shadow-sm p-6">
+          <p className="text-xs font-semibold text-brand-mid-grey uppercase tracking-wider mb-4">
+            Poll Settings
+          </p>
+          <label className="flex items-start gap-4 cursor-pointer group">
+            <div className="relative mt-0.5">
+              <input
+                type="checkbox"
+                name="showResults"
+                defaultChecked
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-brand-light-grey rounded-full peer-checked:bg-brand-coral transition-colors peer-focus:ring-2 peer-focus:ring-brand-coral/30"></div>
+              <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-5"></div>
+            </div>
             <div>
-              <p className="font-medium text-brand-black">
+              <p className="text-sm font-semibold text-brand-black">
                 Show results after voting
               </p>
-              <p className="text-sm text-brand-mid-grey">
-                Voters will see results for all questions after they complete
-                the poll
+              <p className="text-xs text-brand-mid-grey mt-0.5">
+                Voters will see live results for all questions immediately after
+                they submit
               </p>
             </div>
           </label>
         </div>
 
-        {/* Submit */}
-        <div className="flex items-center justify-end gap-4">
+        {/* Error Message */}
+        {error && (
+          <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <X className="w-3 h-3 text-red-500" />
+            </div>
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Submit Row */}
+        <div className="flex items-center justify-between pt-2">
           <Link
             href="/polls"
-            className="px-4 py-2.5 text-brand-dark-grey font-medium hover:bg-brand-light-mauve rounded-xl transition-colors"
+            className="px-5 py-2.5 text-brand-dark-grey font-medium hover:text-brand-black hover:bg-brand-light-mauve rounded-xl transition-all text-sm"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2.5 bg-gradient-to-r from-brand-indigo to-brand-coral hover:shadow-md text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-brand-indigo to-brand-coral text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed text-sm"
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Creating...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Creating poll...
               </>
             ) : (
-              `Create Poll with ${questions.length} Question${questions.length > 1 ? "s" : ""}`
+              <>
+                <Plus className="w-4 h-4" />
+                Create Poll
+              </>
             )}
           </button>
         </div>
