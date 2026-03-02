@@ -45,3 +45,12 @@ next-env.d.ts
 
 # Supabase
 supabase/.temp
+
+# Claude Code
+.claude/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Windows artifacts
+nul
