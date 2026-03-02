@@ -1,37 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPoll } from "@/lib/actions/polls";
 import { ArrowLeft, Plus, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import type { QuestionInput } from "@/types";
 
+interface OptionForm {
+  id: string;
+  text: string;
+}
+
 interface QuestionForm {
+  id: string;
   question_text: string;
   description: string;
-  options: string[];
+  options: OptionForm[];
   isExpanded: boolean;
 }
 
 export default function NewPollPage() {
   const [questions, setQuestions] = useState<QuestionForm[]>([
-    { question_text: "", description: "", options: ["", ""], isExpanded: true },
+    {
+      id: crypto.randomUUID(),
+      question_text: "",
+      description: "",
+      options: [
+        { id: crypto.randomUUID(), text: "" },
+        { id: crypto.randomUUID(), text: "" },
+      ],
+      isExpanded: true,
+    },
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Warn user before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        return "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   // Add a new question
   const addQuestion = () => {
     setQuestions([
       ...questions.map((q) => ({ ...q, isExpanded: false })),
-      { question_text: "", description: "", options: ["", ""], isExpanded: true },
+      {
+        id: crypto.randomUUID(),
+        question_text: "",
+        description: "",
+        options: [
+          { id: crypto.randomUUID(), text: "" },
+          { id: crypto.randomUUID(), text: "" },
+        ],
+        isExpanded: true,
+      },
     ]);
+    setIsDirty(true);
   };
 
   // Remove a question
   const removeQuestion = (qIndex: number) => {
     if (questions.length > 1) {
       setQuestions(questions.filter((_, i) => i !== qIndex));
+      setIsDirty(true);
     }
   };
 
@@ -51,6 +90,7 @@ export default function NewPollPage() {
         i === qIndex ? { ...q, question_text: value } : q
       )
     );
+    setIsDirty(true);
   };
 
   // Update question description
@@ -60,6 +100,7 @@ export default function NewPollPage() {
         i === qIndex ? { ...q, description: value } : q
       )
     );
+    setIsDirty(true);
   };
 
   // Add option to a question
@@ -67,9 +108,12 @@ export default function NewPollPage() {
     if (questions[qIndex].options.length < 10) {
       setQuestions(
         questions.map((q, i) =>
-          i === qIndex ? { ...q, options: [...q.options, ""] } : q
+          i === qIndex
+            ? { ...q, options: [...q.options, { id: crypto.randomUUID(), text: "" }] }
+            : q
         )
       );
+      setIsDirty(true);
     }
   };
 
@@ -83,6 +127,7 @@ export default function NewPollPage() {
             : q
         )
       );
+      setIsDirty(true);
     }
   };
 
@@ -94,12 +139,13 @@ export default function NewPollPage() {
           ? {
               ...q,
               options: q.options.map((opt, oi) =>
-                oi === oIndex ? value : opt
+                oi === oIndex ? { ...opt, text: value } : opt
               ),
             }
           : q
       )
     );
+    setIsDirty(true);
   };
 
   async function handleSubmit(formData: FormData) {
@@ -113,7 +159,7 @@ export default function NewPollPage() {
     const questionInputs: QuestionInput[] = questions.map((q) => ({
       question_text: q.question_text,
       description: q.description || undefined,
-      options: q.options.filter((opt) => opt.trim() !== ""),
+      options: q.options.map((opt) => opt.text).filter((text) => text.trim() !== ""),
     }));
 
     // Validate
@@ -136,6 +182,9 @@ export default function NewPollPage() {
       }
     }
 
+    // Clear dirty flag before submitting so beforeunload doesn't fire on redirect
+    setIsDirty(false);
+
     // Use the first question for backward compatibility
     const result = await createPoll({
       title,
@@ -148,6 +197,7 @@ export default function NewPollPage() {
 
     if (result?.error) {
       setError(result.error);
+      setIsDirty(true);
       setIsLoading(false);
     }
   }
@@ -192,6 +242,7 @@ export default function NewPollPage() {
               name="title"
               type="text"
               required
+              onChange={() => setIsDirty(true)}
               className="w-full px-4 py-3 border border-brand-light-grey rounded-xl focus:ring-2 focus:ring-brand-coral focus:border-brand-coral transition-colors"
               placeholder="e.g., Customer Satisfaction Survey"
             />
@@ -219,7 +270,7 @@ export default function NewPollPage() {
 
           {questions.map((question, qIndex) => (
             <div
-              key={qIndex}
+              key={question.id}
               className="bg-white rounded-2xl shadow-sm border border-brand-light-grey/50 overflow-hidden"
             >
               {/* Question Header */}
@@ -297,13 +348,13 @@ export default function NewPollPage() {
                       Answer Options
                     </label>
                     {question.options.map((option, oIndex) => (
-                      <div key={oIndex} className="flex items-center gap-2">
+                      <div key={option.id} className="flex items-center gap-2">
                         <span className="w-8 h-8 flex items-center justify-center bg-brand-light-mauve rounded-lg text-sm font-medium text-brand-mid-grey">
                           {oIndex + 1}
                         </span>
                         <input
                           type="text"
-                          value={option}
+                          value={option.text}
                           onChange={(e) =>
                             updateOption(qIndex, oIndex, e.target.value)
                           }

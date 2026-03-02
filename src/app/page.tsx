@@ -39,6 +39,85 @@ export default async function HomePage() {
       {/* Features Section */}
       <FeaturesSection />
 
+      {/* Active Polls Section - Premium Design */}
+      <section id="polls" className="py-20 bg-white relative overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#F8F8F8_1px,transparent_1px),linear-gradient(to_bottom,#F8F8F8_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-50" />
+
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-14">
+            <span className="inline-flex items-center gap-2 px-5 py-2 bg-brand-light-mauve text-brand-coral text-sm font-semibold rounded-full mb-4 shadow-sm">
+              <Vote className="w-4 h-4" />
+              Your Voice Matters
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-brand-black mb-4">
+              Active
+              <span className="font-serif italic bg-gradient-to-r from-brand-indigo to-brand-coral bg-clip-text text-transparent"> Polls</span>
+            </h2>
+            <p className="text-lg text-brand-dark-grey max-w-2xl mx-auto">
+              Help us improve by sharing your feedback. Your opinion shapes the future of Jay.
+            </p>
+          </div>
+
+          {activePolls.length === 0 ? (
+            <div className="text-center py-16 bg-brand-alabaster rounded-3xl border border-brand-light-grey">
+              <div className="w-20 h-20 bg-brand-light-mauve rounded-3xl flex items-center justify-center mx-auto mb-5">
+                <Vote className="w-10 h-10 text-brand-indigo" />
+              </div>
+              <h3 className="text-xl font-bold text-brand-black mb-2">No active polls right now</h3>
+              <p className="text-brand-mid-grey max-w-md mx-auto">
+                New polls will appear here when they become available. Check back soon!
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activePolls.map((poll, index) => (
+                <Link
+                  key={poll.id}
+                  href={`/p/${poll.slug}`}
+                  className="group relative p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-brand-light-grey/50 shadow-lg shadow-brand-black/5 hover:shadow-xl hover:shadow-brand-coral/20 transition-all duration-300 hover:-translate-y-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Gradient border on hover */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-indigo to-brand-coral rounded-2xl blur opacity-0 group-hover:opacity-20 transition duration-500" />
+
+                  <div className="relative">
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-brand-light-orange to-brand-light-mauve rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
+                        <Vote className="w-7 h-7 text-brand-coral" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-brand-black mb-1.5 truncate group-hover:text-brand-coral transition-colors">
+                          {poll.title}
+                        </h3>
+                        <p className="text-sm text-brand-dark-grey line-clamp-2 mb-3 leading-relaxed">
+                          {poll.question}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="flex items-center gap-1.5 text-brand-mid-grey font-medium">
+                            <Users className="w-4 h-4" />
+                            {poll.total_votes} votes
+                          </span>
+                          <span className="px-2.5 py-1 bg-brand-light-emerald text-brand-bright-emerald rounded-full font-semibold border border-brand-mid-emerald">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-5 pt-4 border-t border-brand-light-grey/50 flex items-center justify-between">
+                      <span className="text-sm text-brand-dark-grey font-medium">Share your opinion</span>
+                      <div className="w-8 h-8 bg-brand-light-orange rounded-full flex items-center justify-center group-hover:bg-brand-light-orange/80 transition-colors">
+                        <ArrowRight className="w-4 h-4 text-brand-coral group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Communication Channels - Premium Design */}
       <section className="py-20 bg-gradient-to-br from-brand-light-orange/60 via-brand-light-mauve/40 to-brand-alabaster/80 relative overflow-hidden">
         {/* Animated decorative elements */}
@@ -112,75 +191,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Active Polls Section - Premium Design */}
-      {activePolls.length > 0 && (
-        <section id="polls" className="py-20 bg-white relative overflow-hidden">
-          {/* Subtle background pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#F8F8F8_1px,transparent_1px),linear-gradient(to_bottom,#F8F8F8_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-50" />
-
-          <div className="max-w-6xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-14">
-              <span className="inline-flex items-center gap-2 px-5 py-2 bg-brand-light-mauve text-brand-coral text-sm font-semibold rounded-full mb-4 shadow-sm">
-                <Vote className="w-4 h-4" />
-                Your Voice Matters
-              </span>
-              <h2 className="text-4xl lg:text-5xl font-bold text-brand-black mb-4">
-                Active
-                <span className="font-serif italic bg-gradient-to-r from-brand-indigo to-brand-coral bg-clip-text text-transparent"> Polls</span>
-              </h2>
-              <p className="text-lg text-brand-dark-grey max-w-2xl mx-auto">
-                Help us improve by sharing your feedback. Your opinion shapes the future of Jay.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activePolls.map((poll, index) => (
-                <Link
-                  key={poll.id}
-                  href={`/p/${poll.slug}`}
-                  className="group relative p-6 bg-white/90 backdrop-blur-sm rounded-2xl border border-brand-light-grey/50 shadow-lg shadow-brand-black/5 hover:shadow-xl hover:shadow-brand-coral/20 transition-all duration-300 hover:-translate-y-2"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {/* Gradient border on hover */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-indigo to-brand-coral rounded-2xl blur opacity-0 group-hover:opacity-20 transition duration-500" />
-
-                  <div className="relative">
-                    <div className="flex items-start gap-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-brand-light-orange to-brand-light-mauve rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                        <Vote className="w-7 h-7 text-brand-coral" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-brand-black mb-1.5 truncate group-hover:text-brand-coral transition-colors">
-                          {poll.title}
-                        </h3>
-                        <p className="text-sm text-brand-dark-grey line-clamp-2 mb-3 leading-relaxed">
-                          {poll.question}
-                        </p>
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="flex items-center gap-1.5 text-brand-mid-grey font-medium">
-                            <Users className="w-4 h-4" />
-                            {poll.total_votes} votes
-                          </span>
-                          <span className="px-2.5 py-1 bg-brand-light-emerald text-brand-bright-emerald rounded-full font-semibold border border-brand-mid-emerald">
-                            Active
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-5 pt-4 border-t border-brand-light-grey/50 flex items-center justify-between">
-                      <span className="text-sm text-brand-dark-grey font-medium">Share your opinion</span>
-                      <div className="w-8 h-8 bg-brand-light-orange rounded-full flex items-center justify-center group-hover:bg-brand-light-orange/80 transition-colors">
-                        <ArrowRight className="w-4 h-4 text-brand-coral group-hover:translate-x-0.5 transition-transform" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* CTA Section - Brand Gradient */}
       <section className="py-20 bg-gradient-brand relative overflow-hidden">
         {/* Animated background elements */}
@@ -194,31 +204,31 @@ export default async function HomePage() {
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
           <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full mb-6 border border-white/20">
             <Sparkles className="w-4 h-4" />
-            Join 10,000+ UK movers
+            Be part of Jay&apos;s journey
           </span>
           <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Ready to make your
+            Your feedback shapes Jay&apos;s future.
             <br />
-            <span className="font-serif italic">move easier?</span>
+            <span className="font-serif italic">Help us improve.</span>
           </h2>
           <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of UK movers who&apos;ve simplified their move with Jay&apos;s AI-powered assistance.
+            Share your experience and help us make Jay better for everyone. Every vote counts.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="https://justmovein.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative inline-flex items-center justify-center gap-2 px-10 py-5 bg-white text-brand-coral font-bold rounded-2xl shadow-2xl shadow-brand-black/30 hover:shadow-brand-black/40 transition-all duration-300 hover:-translate-y-1"
+              className="group relative inline-flex items-center justify-center gap-2 px-10 py-5 bg-white text-brand-coral font-bold rounded-2xl shadow-2xl shadow-brand-black/30 hover:shadow-brand-black/40 transition-all duration-300 hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral"
             >
-              Get Started with Jay
+              Visit JustMoveIn.com
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
             <a
-              href="#features"
-              className="inline-flex items-center justify-center gap-2 px-8 py-5 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300"
+              href="#polls"
+              className="inline-flex items-center justify-center gap-2 px-8 py-5 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral"
             >
-              Learn More
+              View Active Polls
             </a>
           </div>
         </div>
@@ -245,7 +255,7 @@ export default async function HomePage() {
                 href="https://uk.trustpilot.com/review/justmovein.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand-dark-grey hover:text-brand-coral transition-colors font-medium"
+                className="text-brand-dark-grey hover:text-brand-coral transition-colors font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral"
               >
                 Trustpilot Reviews
               </a>
@@ -253,11 +263,11 @@ export default async function HomePage() {
                 href="https://justmovein.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand-dark-grey hover:text-brand-coral transition-colors font-medium"
+                className="text-brand-dark-grey hover:text-brand-coral transition-colors font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral"
               >
                 JustMoveIn.com
               </a>
-              <Link href="/login" className="text-brand-dark-grey hover:text-brand-coral transition-colors font-medium">
+              <Link href="/login" className="text-brand-dark-grey hover:text-brand-coral transition-colors font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral">
                 Admin
               </Link>
             </div>

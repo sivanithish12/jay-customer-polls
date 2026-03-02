@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -11,8 +11,6 @@ import {
 } from "@/lib/actions/votes";
 import {
   pageVariants,
-  staggerContainer,
-  staggerItem,
   barVariants,
   checkmarkVariants,
   logoVariants,
@@ -57,14 +55,16 @@ function getSessionId(): string {
 
   let sessionId = localStorage.getItem("poll_session_id");
   if (!sessionId) {
-    sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     localStorage.setItem("poll_session_id", sessionId);
   }
   return sessionId;
 }
 
 export default function PublicPollPage({ params }: PageProps) {
-  const [slug, setSlug] = useState<string | null>(null);
+  // ISSUE M1 — use React.use() at the top level instead of params.then() in useEffect
+  const { slug } = use(params);
+
   const [poll, setPoll] = useState<(Poll & { questions: PollQuestionWithOptions[] }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [stage, setStage] = useState<PollStage>("welcome");
@@ -74,15 +74,14 @@ export default function PublicPollPage({ params }: PageProps) {
   const [sessionId, setSessionId] = useState<string>("");
   const supabase = createClient();
 
-  // Resolve params
+  // ISSUE C8 — only set sessionId on the client after mount, never during SSR
   useEffect(() => {
-    params.then((p) => setSlug(p.slug));
-  }, [params]);
+    setSessionId(getSessionId());
+  }, []);
 
   // Fetch poll data
   useEffect(() => {
-    if (!slug) return;
-
+    // slug is now always a string from use(params), no null check needed
     async function fetchPoll(slug: string) {
       // Use the new function that gets questions
       const pollData = await getPublicPollWithQuestions(slug);
@@ -108,9 +107,10 @@ export default function PublicPollPage({ params }: PageProps) {
           .eq("poll_id", legacyPoll.id)
           .order("display_order");
 
-        // Convert to new format with a single question
+        // ISSUE C5 — use id: "" (falsy) instead of id: "legacy" to prevent
+        // a non-UUID string from being passed as a DB foreign key
         const legacyQuestion: PollQuestionWithOptions = {
-          id: "legacy",
+          id: "",
           poll_id: legacyPoll.id,
           question_text: legacyPoll.question,
           description: legacyPoll.description,
@@ -127,10 +127,8 @@ export default function PublicPollPage({ params }: PageProps) {
       setLoading(false);
 
       // Check if already voted
-      const sid = getSessionId();
-      setSessionId(sid);
-
       if (pollData) {
+        const sid = getSessionId();
         const hasVoted = await checkIfVoted(pollData.id, sid);
         if (hasVoted) {
           const resultsData = await getPollResultsWithQuestions(pollData.id);
@@ -145,8 +143,10 @@ export default function PublicPollPage({ params }: PageProps) {
     fetchPoll(slug);
   }, [slug, supabase]);
 
-  // Trigger confetti with brand colors
+  // ISSUE M13 — Trigger confetti only when prefers-reduced-motion is not set
   const triggerConfetti = useCallback(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const duration = 3000;
     const end = Date.now() + duration;
 
@@ -186,11 +186,13 @@ export default function PublicPollPage({ params }: PageProps) {
     setStage("submitting");
     setError(null);
 
-    // Build votes array
-    const votes = poll.questions.map((q) => ({
-      questionId: q.id,
-      optionId: selectedOptions[q.id],
-    }));
+    // ISSUE C5 — filter out legacy/falsy question IDs to prevent FK violations
+    const votes = poll.questions
+      .filter((q) => q.id && q.id !== "legacy")
+      .map((q) => ({
+        questionId: q.id,
+        optionId: selectedOptions[q.id],
+      }));
 
     const result = await submitAllVotes(poll.id, votes, sessionId);
 
@@ -412,13 +414,24 @@ export default function PublicPollPage({ params }: PageProps) {
               </div>
             </motion.div>
 
+            {/* ISSUE H7 — Error display with Dismiss button */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm text-center"
+                className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm"
               >
-                {error}
+                <div className="flex items-center justify-between gap-3">
+                  <span>{error}</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => setError(null)}
+                      className="text-red-500 hover:text-red-700 font-medium text-xs underline"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
               </motion.div>
             )}
 
@@ -449,9 +462,12 @@ export default function PublicPollPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  {/* Question text */}
+                  {/* ISSUE H12 — Question text with id for aria-labelledby */}
                   <div className="mb-5">
-                    <h3 className="text-lg font-semibold text-brand-black">
+                    <h3
+                      id={`question-${question.id}`}
+                      className="text-lg font-semibold text-brand-black"
+                    >
                       {question.question_text}
                     </h3>
                     {question.description && (
@@ -459,11 +475,18 @@ export default function PublicPollPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  {/* Options */}
-                  <div className="space-y-3">
+                  {/* ISSUE H12 — Options wrapped in radiogroup with aria-labelledby */}
+                  <div
+                    role="radiogroup"
+                    aria-labelledby={`question-${question.id}`}
+                    className="space-y-3"
+                  >
                     {question.options.map((option) => (
                       <motion.button
                         key={option.id}
+                        role="radio"
+                        aria-checked={selectedOptions[question.id] === option.id}
+                        aria-label={option.option_text}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => {
@@ -619,9 +642,9 @@ export default function PublicPollPage({ params }: PageProps) {
                     </div>
                   </div>
 
-                  {/* Options with results */}
+                  {/* ISSUE H5 — spread to avoid mutating state array; ISSUE M5 — show percentages and winner badge */}
                   <div className="space-y-3">
-                    {question.options
+                    {[...question.options]
                       .sort((a, b) => b.vote_count - a.vote_count)
                       .map((option, optIndex) => {
                         const percentage =
@@ -631,9 +654,22 @@ export default function PublicPollPage({ params }: PageProps) {
 
                         return (
                           <div key={option.id} className="space-y-2">
-                            <span className="font-medium text-brand-dark-grey">
-                              {option.option_text}
-                            </span>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1 min-w-0">
+                                <span className="font-medium text-brand-dark-grey truncate">
+                                  {option.option_text}
+                                </span>
+                                {optIndex === 0 && option.vote_count > 0 && (
+                                  <span className="text-xs font-semibold text-brand-bright-emerald bg-brand-light-emerald px-2 py-0.5 rounded-full ml-2 flex-shrink-0">
+                                    Leading
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="text-sm font-bold text-brand-coral">{percentage}%</span>
+                                <span className="text-xs text-brand-mid-grey">{option.vote_count} votes</span>
+                              </div>
+                            </div>
                             <div className="h-2 bg-brand-light-mauve rounded-full overflow-hidden">
                               <motion.div
                                 custom={percentage}
@@ -704,6 +740,16 @@ export default function PublicPollPage({ params }: PageProps) {
               All answers submitted successfully
             </motion.div>
 
+            {/* ISSUE H11 — helpful message directing to other polls */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
+              className="text-brand-mid-grey text-sm mb-6"
+            >
+              Want to share more feedback? Browse other active polls.
+            </motion.p>
+
             {/* Action Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -719,11 +765,12 @@ export default function PublicPollPage({ params }: PageProps) {
               >
                 Visit JustMoveIn
               </a>
+              {/* ISSUE H11 — changed "Back to Home" to "View All Polls" pointing to /polls */}
               <a
-                href="/"
+                href="/polls"
                 className="px-8 py-3 bg-white text-brand-dark-grey font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border border-brand-light-grey"
               >
-                Back to Home
+                View All Polls
               </a>
             </motion.div>
           </motion.div>

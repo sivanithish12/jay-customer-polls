@@ -43,7 +43,7 @@ const Logo = () => {
   return (
     <Link
       href="/dashboard"
-      className="font-normal flex space-x-3 items-center text-sm py-1 relative z-20"
+      className="font-normal flex space-x-3 items-center text-sm py-1 relative z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg"
     >
       <div className="h-9 w-9 bg-gradient-to-br from-brand-indigo to-brand-coral rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
         <Brain className="h-5 w-5 text-white" />
@@ -64,7 +64,7 @@ const LogoIcon = () => {
   return (
     <Link
       href="/dashboard"
-      className="font-normal flex items-center justify-center text-sm py-1 relative z-20"
+      className="font-normal flex items-center justify-center text-sm py-1 relative z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg"
     >
       <div className="h-9 w-9 bg-gradient-to-br from-brand-indigo to-brand-coral rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
         <Brain className="h-5 w-5 text-white" />
@@ -86,7 +86,7 @@ function NavLink({ item }: { item: typeof navItems[0] }) {
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200",
+        "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg",
         isActive
           ? "bg-brand-light-orange text-brand-coral"
           : "text-brand-dark-grey hover:bg-brand-alabaster hover:text-brand-black",
@@ -124,7 +124,7 @@ function LogoutButton() {
       <button
         type="submit"
         className={cn(
-          "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200 text-brand-dark-grey hover:bg-red-50 hover:text-red-600 w-full",
+          "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200 text-brand-dark-grey hover:bg-red-50 hover:text-red-600 w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg",
           !open && "justify-center"
         )}
       >
@@ -151,7 +151,7 @@ function BackToSiteLink() {
     <Link
       href="/"
       className={cn(
-        "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200 text-brand-dark-grey hover:bg-brand-alabaster hover:text-brand-black",
+        "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200 text-brand-dark-grey hover:bg-brand-alabaster hover:text-brand-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg",
         !open && "justify-center"
       )}
     >

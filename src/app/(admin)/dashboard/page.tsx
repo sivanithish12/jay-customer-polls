@@ -5,33 +5,41 @@ import Link from "next/link";
 async function getStats() {
   const supabase = await createClient();
 
-  // Get poll counts
-  const { data: polls } = await supabase
-    .from("polls")
-    .select("id, status, total_votes");
+  const [
+    { count: totalPolls },
+    { count: activePolls },
+    { count: draftPolls },
+    { data: votesData },
+    { data: recentPolls },
+  ] = await Promise.all([
+    supabase.from("polls").select("*", { count: "exact", head: true }),
+    supabase.from("polls").select("*", { count: "exact", head: true }).eq("status", "active"),
+    supabase.from("polls").select("*", { count: "exact", head: true }).eq("status", "draft"),
+    supabase.from("polls").select("total_votes"),
+    supabase
+      .from("polls")
+      .select("id, title, status, total_votes, created_at, slug")
+      .order("created_at", { ascending: false })
+      .limit(5),
+  ]);
 
-  const totalPolls = polls?.length || 0;
-  const activePolls = polls?.filter((p) => p.status === "active").length || 0;
-  const totalVotes = polls?.reduce((sum, p) => sum + (p.total_votes || 0), 0) || 0;
+  const totalVotes = (votesData || []).reduce(
+    (sum, p) => sum + (p.total_votes || 0),
+    0
+  );
 
-  return { totalPolls, activePolls, totalVotes };
-}
-
-async function getRecentPolls() {
-  const supabase = await createClient();
-
-  const { data: polls } = await supabase
-    .from("polls")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(5);
-
-  return polls || [];
+  return {
+    totalPolls: totalPolls ?? 0,
+    activePolls: activePolls ?? 0,
+    draftPolls: draftPolls ?? 0,
+    totalVotes,
+    recentPolls: recentPolls || [],
+  };
 }
 
 export default async function DashboardPage() {
   const stats = await getStats();
-  const recentPolls = await getRecentPolls();
+  const recentPolls = stats.recentPolls;
 
   const statCards = [
     {

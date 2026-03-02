@@ -126,27 +126,35 @@ export const MobileSidebar = ({
         </div>
         <AnimatePresence>
           {open && (
-            <motion.div
-              initial={{ x: "-100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "-100%", opacity: 0 }}
-              transition={{
-                duration: 0.3,
-                ease: "easeInOut",
-              }}
-              className={cn(
-                "fixed h-full w-full inset-0 bg-white p-10 z-[100] flex flex-col justify-between",
-                className
-              )}
-            >
+            <>
+              {/* Backdrop */}
               <div
-                className="absolute right-10 top-10 z-50 text-slate-800 cursor-pointer"
-                onClick={() => setOpen(!open)}
+                className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+                onClick={() => setOpen(false)}
+                aria-hidden="true"
+              />
+              <motion.div
+                initial={{ x: "-100%", opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: "-100%", opacity: 0 }}
+                transition={{
+                  duration: 0.3,
+                  ease: "easeInOut",
+                }}
+                className={cn(
+                  "fixed h-full w-full inset-0 bg-white p-10 z-[100] flex flex-col justify-between",
+                  className
+                )}
               >
-                <X />
-              </div>
-              {children}
-            </motion.div>
+                <div
+                  className="absolute right-10 top-10 z-50 text-slate-800 cursor-pointer"
+                  onClick={() => setOpen(!open)}
+                >
+                  <X />
+                </div>
+                {children}
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>
@@ -168,7 +176,7 @@ export const SidebarLink = ({
     <Link
       href={link.href}
       className={cn(
-        "flex items-center justify-start gap-2 group/sidebar py-2",
+        "flex items-center justify-start gap-2 group/sidebar py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg",
         className
       )}
       {...props}

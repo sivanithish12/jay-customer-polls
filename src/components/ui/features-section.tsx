@@ -10,6 +10,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { ComponentType } from "react";
 
 const features = [
   {
@@ -71,7 +72,7 @@ function FeatureCard({
 }: {
   name: string;
   className: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   description: string;
   href: string;
   cta: string;
@@ -95,6 +96,7 @@ function FeatureCard({
       <img
         src={backgroundImage}
         alt={name}
+        loading="lazy"
         className="absolute inset-0 w-full h-full object-cover opacity-15 group-hover:opacity-20 transition-opacity duration-500"
       />
 

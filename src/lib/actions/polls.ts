@@ -8,17 +8,12 @@ import type { CreatePollInput, UpdatePollInput, PollWithOptions, PollWithQuestio
 export async function createPoll(input: CreatePollInput) {
   const supabase = await createClient();
 
-  console.log("[createPoll] Starting poll creation...");
-
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
 
-  console.log("[createPoll] Auth check:", { user: user?.email, authError: authError?.message });
-
   if (!user) {
-    console.log("[createPoll] Not authenticated - returning error");
     return { error: "Not authenticated" };
   }
 
@@ -53,12 +48,6 @@ export async function createPoll(input: CreatePollInput) {
   }
 
   // Create poll
-  console.log("[createPoll] Inserting poll with data:", {
-    title: input.title,
-    question: allQuestions[0].question_text,
-    created_by: user.id,
-  });
-
   const { data: poll, error: pollError } = await supabase
     .from("polls")
     .insert({
@@ -72,10 +61,7 @@ export async function createPoll(input: CreatePollInput) {
     .select()
     .single();
 
-  console.log("[createPoll] Poll insert result:", { poll: poll?.id, pollError: pollError?.message });
-
   if (pollError) {
-    console.error("[createPoll] Poll creation error:", pollError);
     return { error: pollError.message };
   }
 
@@ -96,7 +82,6 @@ export async function createPoll(input: CreatePollInput) {
       .single();
 
     if (questionError) {
-      console.error("[createPoll] Question creation error:", questionError);
       await supabase.from("polls").delete().eq("id", poll.id);
       return { error: questionError.message };
     }
@@ -116,13 +101,11 @@ export async function createPoll(input: CreatePollInput) {
       .insert(options);
 
     if (optionsError) {
-      console.error("[createPoll] Options error, rolling back:", optionsError);
       await supabase.from("polls").delete().eq("id", poll.id);
       return { error: optionsError.message };
     }
   }
 
-  console.log("[createPoll] Success! Redirecting to /polls/" + poll.id);
   revalidatePath("/polls");
   revalidatePath("/dashboard");
   redirect(`/polls/${poll.id}`);
@@ -130,6 +113,23 @@ export async function createPoll(input: CreatePollInput) {
 
 export async function updatePoll(pollId: string, input: UpdatePollInput) {
   const supabase = await createClient();
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  // Input validation
+  const VALID_STATUSES = ["draft", "active", "closed"];
+  if (input.status && !VALID_STATUSES.includes(input.status)) {
+    return { error: "Invalid status value" };
+  }
+  if (input.title !== undefined && input.title.trim().length === 0) {
+    return { error: "Title cannot be empty" };
+  }
+  if (input.title && input.title.length > 500) {
+    return { error: "Title too long (max 500 characters)" };
+  }
 
   const { error } = await supabase
     .from("polls")
@@ -165,6 +165,11 @@ export async function closePoll(pollId: string) {
 
 export async function deletePoll(pollId: string) {
   const supabase = await createClient();
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
 
   const { error } = await supabase.from("polls").delete().eq("id", pollId);
 
@@ -219,17 +224,26 @@ export async function getPollWithQuestions(pollId: string): Promise<PollWithQues
     .eq("poll_id", pollId)
     .order("display_order");
 
-  const questionsWithOptions = await Promise.all(
-    (questions || []).map(async (question) => {
-      const { data: options } = await supabase
-        .from("poll_options")
-        .select("*")
-        .eq("question_id", question.id)
-        .order("display_order");
+  // Fetch ALL options for ALL questions in ONE query
+  const questionIds = (questions || []).map(q => q.id);
+  const { data: allOptions } = await supabase
+    .from("poll_options")
+    .select("*")
+    .in("question_id", questionIds)
+    .order("display_order");
 
-      return { ...question, options: options || [] };
-    })
-  );
+  // Group options by question_id in JS
+  const allOptionsArr = allOptions ?? [];
+  const optionsByQuestion = allOptionsArr.reduce((acc, opt) => {
+    if (!acc[opt.question_id]) acc[opt.question_id] = [];
+    acc[opt.question_id].push(opt);
+    return acc;
+  }, {} as Record<string, typeof allOptionsArr[number][]>);
+
+  const questionsWithOptions = (questions || []).map(q => ({
+    ...q,
+    options: optionsByQuestion[q.id] || [],
+  }));
 
   return { ...poll, questions: questionsWithOptions } as PollWithQuestions;
 }

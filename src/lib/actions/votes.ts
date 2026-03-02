@@ -48,6 +48,19 @@ export async function submitVote(
     return { success: false, error: "This poll is no longer active" };
   }
 
+  // Check if this IP has already voted on this poll
+  const { data: existingIpVote } = await supabase
+    .from("poll_responses")
+    .select("id")
+    .eq("poll_id", pollId)
+    .eq("ip_hash", ipHash)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingIpVote) {
+    return { success: false, error: "You have already voted in this poll", alreadyVoted: true };
+  }
+
   // Check if already voted for this question
   let existingVoteQuery = supabase
     .from("poll_responses")
@@ -121,6 +134,19 @@ export async function submitAllVotes(
 
   if (poll.status !== "active") {
     return { success: false, error: "This poll is no longer active" };
+  }
+
+  // Check if this IP has already voted on this poll
+  const { data: existingIpVote } = await supabase
+    .from("poll_responses")
+    .select("id")
+    .eq("poll_id", pollId)
+    .eq("ip_hash", ipHash)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingIpVote) {
+    return { success: false, error: "You have already voted in this poll", alreadyVoted: true };
   }
 
   // Check if already voted on any question
@@ -235,18 +261,26 @@ export async function getPublicPollWithQuestions(slug: string) {
     .eq("poll_id", poll.id)
     .order("display_order");
 
-  // Fetch options for each question
-  const questionsWithOptions: PollQuestionWithOptions[] = await Promise.all(
-    (questions || []).map(async (question) => {
-      const { data: options } = await supabase
-        .from("poll_options")
-        .select("*")
-        .eq("question_id", question.id)
-        .order("display_order");
+  // Fetch ALL options for ALL questions in ONE query
+  const questionIds = (questions || []).map(q => q.id);
+  const { data: allOptions } = await supabase
+    .from("poll_options")
+    .select("*")
+    .in("question_id", questionIds)
+    .order("display_order");
 
-      return { ...question, options: options || [] };
-    })
-  );
+  // Group options by question_id in JS
+  const allOptionsArr = allOptions ?? [];
+  const optionsByQuestion = allOptionsArr.reduce((acc, opt) => {
+    if (!acc[opt.question_id]) acc[opt.question_id] = [];
+    acc[opt.question_id].push(opt);
+    return acc;
+  }, {} as Record<string, typeof allOptionsArr[number][]>);
+
+  const questionsWithOptions: PollQuestionWithOptions[] = (questions || []).map(q => ({
+    ...q,
+    options: optionsByQuestion[q.id] || [],
+  }));
 
   return { ...poll, questions: questionsWithOptions };
 }
@@ -298,24 +332,31 @@ export async function getPollResultsWithQuestions(pollId: string) {
     .eq("poll_id", pollId)
     .order("display_order");
 
-  // Fetch options for each question with vote counts
-  const questionsWithResults = await Promise.all(
-    (questions || []).map(async (question) => {
-      const { data: options } = await supabase
-        .from("poll_options")
-        .select("id, option_text, vote_count")
-        .eq("question_id", question.id)
-        .order("display_order");
+  // Fetch ALL options for ALL questions in ONE query
+  const questionIds = (questions || []).map(q => q.id);
+  const { data: allOptions } = await supabase
+    .from("poll_options")
+    .select("id, option_text, vote_count, question_id")
+    .in("question_id", questionIds)
+    .order("display_order");
 
-      const questionVotes = (options || []).reduce((sum, opt) => sum + opt.vote_count, 0);
+  // Group options by question_id in JS
+  const allOptionsArr2 = allOptions ?? [];
+  const optionsByQuestion = allOptionsArr2.reduce((acc, opt) => {
+    if (!acc[opt.question_id]) acc[opt.question_id] = [];
+    acc[opt.question_id].push(opt);
+    return acc;
+  }, {} as Record<string, typeof allOptionsArr2[number][]>);
 
-      return {
-        ...question,
-        options: options || [],
-        totalVotes: questionVotes,
-      };
-    })
-  );
+  const questionsWithResults = (questions || []).map(q => {
+    const options = optionsByQuestion[q.id] || [];
+    const questionVotes = options.reduce((sum, opt) => sum + opt.vote_count, 0);
+    return {
+      ...q,
+      options,
+      totalVotes: questionVotes,
+    };
+  });
 
   return {
     totalVotes: poll.total_votes,

@@ -9,7 +9,6 @@ import {
   TrendingUp,
   RefreshCw,
   BarChart3,
-  PieChart as PieChartIcon,
   Activity,
   Award,
   Target,
@@ -26,9 +25,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-  RadialBarChart,
-  RadialBar,
 } from "recharts";
 import {
   Card,
@@ -38,9 +34,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
 import type { Poll, PollQuestion, PollOption } from "@/types";
@@ -70,7 +63,7 @@ export default function ResultsPage({ params }: PageProps) {
   const [poll, setPoll] = useState<Poll | null>(null);
   const [questions, setQuestions] = useState<QuestionWithOptions[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Fetch initial data
   useEffect(() => {
@@ -108,7 +101,7 @@ export default function ResultsPage({ params }: PageProps) {
     }
 
     fetchData();
-  }, [id, supabase]);
+  }, [id]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -154,7 +147,7 @@ export default function ResultsPage({ params }: PageProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, supabase]);
+  }, [id]);
 
   // Calculate analytics data
   const analytics = useMemo(() => {
@@ -430,7 +423,7 @@ export default function ResultsPage({ params }: PageProps) {
 
                   {/* Bar breakdown */}
                   <div className="space-y-3">
-                    {question.options
+                    {[...question.options]
                       .sort((a, b) => b.vote_count - a.vote_count)
                       .map((option, oIndex) => {
                         const percentage =
@@ -609,7 +602,7 @@ export default function ResultsPage({ params }: PageProps) {
                       (acc, opt) => acc + opt.vote_count,
                       0
                     );
-                    return question.options
+                    return [...question.options]
                       .sort((a, b) => b.vote_count - a.vote_count)
                       .map((option, oIdx) => (
                         <tr

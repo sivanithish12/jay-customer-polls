@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { PollOption } from "@/types";
 
@@ -22,7 +22,7 @@ export function useRealtimeResults({
 }: UseRealtimeResultsOptions): RealtimeResults {
   const [options, setOptions] = useState<PollOption[]>(initialOptions);
   const [totalVotes, setTotalVotes] = useState(initialTotalVotes);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     const channel = supabase
@@ -62,7 +62,7 @@ export function useRealtimeResults({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [pollId, supabase]);
+  }, [pollId]);
 
   return { options, totalVotes };
 }

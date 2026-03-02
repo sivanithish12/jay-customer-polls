@@ -1,18 +1,16 @@
-import { getPollWithQuestions, publishPoll, closePoll, deletePoll } from "@/lib/actions/polls";
+import { getPollWithQuestions } from "@/lib/actions/polls";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   ExternalLink,
-  Play,
-  Pause,
-  Trash2,
   Eye,
   Users,
   Clock,
-  HelpCircle,
 } from "lucide-react";
 import { CopyButton } from "@/components/ui/copy-button";
+import { DeletePollDialog } from "@/components/admin/delete-poll-dialog";
+import { PublishPollButton, ClosePollButton } from "@/components/admin/poll-status-buttons";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -26,10 +24,15 @@ export default async function PollDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Use relative URL for the link (works regardless of domain/port)
-  const pollPath = `/p/${poll.slug}`;
-  // For copying, we need full URL - construct from window.location on client or use env var
-  const pollUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}${pollPath}`;
+  // ISSUE C4 FIX: Don't fall back to localhost — an empty base is safer in production.
+  // Admins must set NEXT_PUBLIC_APP_URL in their Vercel environment variables.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (!appUrl && process.env.NODE_ENV === "production") {
+    console.warn(
+      "⚠️  NEXT_PUBLIC_APP_URL is not set — poll share links will be broken. Add it to your Vercel environment variables."
+    );
+  }
+  const pollUrl = `${appUrl}/p/${poll.slug}`;
 
   return (
     <div className="max-w-4xl">
@@ -62,28 +65,13 @@ export default async function PollDetailPage({ params }: PageProps) {
             <p className="text-brand-dark-grey mt-1">{poll.question}</p>
           </div>
 
+          {/* ISSUE H9 FIX: Publish/Close buttons now use client components with confirmation */}
           <div className="flex items-center gap-2">
             {poll.status === "draft" && (
-              <form action={async () => { "use server"; await publishPoll(id); }}>
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-colors"
-                >
-                  <Play className="w-4 h-4" />
-                  Publish
-                </button>
-              </form>
+              <PublishPollButton pollId={poll.id} />
             )}
             {poll.status === "active" && (
-              <form action={async () => { "use server"; await closePoll(id); }}>
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors"
-                >
-                  <Pause className="w-4 h-4" />
-                  Close
-                </button>
-              </form>
+              <ClosePollButton pollId={poll.id} />
             )}
             <Link
               href={`/polls/${id}/results`}
@@ -99,36 +87,48 @@ export default async function PollDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Poll Link - Show for all statuses */}
+          {/* Poll Link — ISSUE M3 FIX: only show copyable URL for active polls */}
           <div className="bg-white rounded-2xl shadow-sm border border-brand-light-grey/50 p-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-brand-black">
                 {poll.status === "active" ? "Share Poll" : "Poll Link"}
               </h3>
               {poll.status !== "active" && (
-                <span className="text-xs px-2 py-1 bg-brand-light-yellow text-brand-brown rounded-full font-medium">
+                <span className="text-xs px-2 py-1 bg-brand-light-mauve text-brand-indigo rounded-full font-medium">
                   {poll.status === "draft" ? "Publish to enable voting" : "Poll is closed"}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={pollUrl}
-                readOnly
-                className="flex-1 px-4 py-2.5 bg-brand-alabaster border border-brand-light-grey rounded-xl text-sm text-brand-dark-grey"
-              />
-              <CopyButton text={pollUrl} />
-              <a
-                href={pollPath}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2.5 bg-brand-light-orange hover:bg-brand-light-orange/80 rounded-xl transition-colors"
-                title={poll.status === "active" ? "Open poll" : "Preview poll (voting disabled)"}
-              >
-                <ExternalLink className="w-5 h-5 text-brand-coral" />
-              </a>
-            </div>
+
+            {poll.status !== "active" ? (
+              // ISSUE M3 FIX: For non-active polls, hide the copyable URL to avoid sharing broken links
+              <div className="p-4 bg-brand-light-mauve rounded-xl border border-brand-light-grey text-sm text-brand-dark-grey">
+                <span className="font-medium">Poll not yet public.</span>{" "}
+                {poll.status === "draft"
+                  ? "Publish this poll to generate a shareable link for customers."
+                  : "This poll is closed and no longer accepting votes. The link is disabled."}
+              </div>
+            ) : (
+              // Only show the full copy UI when the poll is active
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={pollUrl}
+                  readOnly
+                  className="flex-1 px-4 py-2.5 bg-brand-alabaster border border-brand-light-grey rounded-xl text-sm text-brand-dark-grey"
+                />
+                <CopyButton text={pollUrl} />
+                <a
+                  href={`/p/${poll.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 bg-brand-light-orange hover:bg-brand-light-orange/80 rounded-xl transition-colors"
+                  title="Open poll"
+                >
+                  <ExternalLink className="w-5 h-5 text-brand-coral" />
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Questions & Options */}
@@ -234,18 +234,10 @@ export default async function PollDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Danger Zone */}
+          {/* Danger Zone — ISSUE C3 FIX: Delete now uses confirmation dialog */}
           <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-6">
             <h3 className="font-semibold text-red-600 mb-4">Danger Zone</h3>
-            <form action={async () => { "use server"; await deletePoll(id); }}>
-              <button
-                type="submit"
-                className="flex items-center gap-2 w-full px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-xl transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete Poll
-              </button>
-            </form>
+            <DeletePollDialog pollId={poll.id} />
           </div>
         </div>
       </div>
