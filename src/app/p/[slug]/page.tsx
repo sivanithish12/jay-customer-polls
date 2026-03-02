@@ -83,7 +83,7 @@ export default function PublicPollPage({ params }: PageProps) {
   useEffect(() => {
     if (!slug) return;
 
-    async function fetchPoll() {
+    async function fetchPoll(slug: string) {
       // Use the new function that gets questions
       const pollData = await getPublicPollWithQuestions(slug);
 
@@ -142,7 +142,7 @@ export default function PublicPollPage({ params }: PageProps) {
       }
     }
 
-    fetchPoll();
+    fetchPoll(slug);
   }, [slug, supabase]);
 
   // Trigger confetti with brand colors
