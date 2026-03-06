@@ -472,7 +472,7 @@ export default function ResultsPage({ params }: PageProps) {
                   </div>
 
                   {/* Legend */}
-                  <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-brand-light-grey/50">
+                  <div className="flex flex-wrap gap-3 mt-6 pt-4">
                     {question.options.map((opt, idx) => (
                       <div key={opt.id} className="flex items-center gap-2">
                         <div
@@ -589,7 +589,7 @@ export default function ResultsPage({ params }: PageProps) {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-brand-light-grey">
+                  <tr>
                     <th className="text-left py-3 px-4 font-semibold text-brand-dark-grey">Question</th>
                     <th className="text-left py-3 px-4 font-semibold text-brand-dark-grey">Option</th>
                     <th className="text-right py-3 px-4 font-semibold text-brand-dark-grey">Votes</th>
@@ -607,7 +607,7 @@ export default function ResultsPage({ params }: PageProps) {
                       .map((option, oIdx) => (
                         <tr
                           key={option.id}
-                          className="border-b border-brand-light-grey/50 hover:bg-brand-alabaster transition-colors"
+                          className="hover:bg-brand-alabaster transition-colors"
                         >
                           {oIdx === 0 && (
                             <td

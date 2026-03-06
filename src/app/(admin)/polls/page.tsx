@@ -27,7 +27,7 @@ export default async function PollsPage() {
 
       {/* Polls List — ISSUE H2 FIX: replaced static table with searchable/filterable/sortable client component */}
       {polls.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-brand-light-grey/50 p-12 text-center">
+        <div className="bg-white rounded-2xl shadow-md p-12 text-center">
           <ClipboardList className="w-16 h-16 mx-auto mb-4 text-brand-mid-grey" />
           <h3 className="text-lg font-medium text-brand-black mb-2">
             No polls yet

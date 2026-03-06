@@ -230,7 +230,7 @@ export default function NewPollPage() {
       {/* Form */}
       <form action={handleSubmit} className="space-y-5">
         {/* Poll Details Card */}
-        <div className="bg-white rounded-2xl border border-brand-light-grey/50 shadow-sm p-6">
+        <div className="bg-white rounded-2xl shadow-md p-6">
           <p className="text-xs font-semibold text-brand-mid-grey uppercase tracking-wider mb-4">
             Poll Details
           </p>
@@ -326,7 +326,7 @@ export default function NewPollPage() {
 
               {/* Expanded question body */}
               {question.isExpanded && (
-                <div className="p-5 pt-0 space-y-5 border-t border-brand-light-grey/50">
+                <div className="p-5 pt-0 space-y-5">
                   {/* Question text */}
                   <div className="pt-5">
                     <label className="block text-xs font-semibold text-brand-mid-grey uppercase tracking-wide mb-1.5">
@@ -416,7 +416,7 @@ export default function NewPollPage() {
         </div>
 
         {/* Settings Card */}
-        <div className="bg-white rounded-2xl border border-brand-light-grey/50 shadow-sm p-6">
+        <div className="bg-white rounded-2xl shadow-md p-6">
           <p className="text-xs font-semibold text-brand-mid-grey uppercase tracking-wider mb-4">
             Poll Settings
           </p>

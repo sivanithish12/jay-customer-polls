@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, AlertTriangle } from "lucide-react";
+import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { deletePoll } from "@/lib/actions/polls";
 
 export function DeletePollDialog({ pollId }: { pollId: string }) {
@@ -53,9 +53,16 @@ export function DeletePollDialog({ pollId }: { pollId: string }) {
         <button
           onClick={handleDelete}
           disabled={loading}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
         >
-          {loading ? "Deleting..." : "Yes, Delete Permanently"}
+          {loading ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Deleting…
+            </>
+          ) : (
+            "Yes, Delete Permanently"
+          )}
         </button>
       </div>
     </div>

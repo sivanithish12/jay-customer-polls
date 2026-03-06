@@ -9,8 +9,10 @@ import {
   LogOut,
   Brain,
   Home,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 import {
@@ -115,30 +117,42 @@ function NavLink({ item }: { item: typeof navItems[0] }) {
   );
 }
 
+// Inner logout button — must be inside <form> to use useFormStatus
+function LogoutButtonInner({ open, animate }: { open: boolean; animate: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className={cn(
+        "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200 text-brand-dark-grey hover:bg-red-50 hover:text-red-600 w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg disabled:opacity-60",
+        !open && "justify-center"
+      )}
+    >
+      {pending ? (
+        <Loader2 className="h-5 w-5 flex-shrink-0 text-red-400 animate-spin" />
+      ) : (
+        <LogOut className="h-5 w-5 flex-shrink-0 text-brand-mid-grey group-hover/sidebar:text-red-500 transition-colors" />
+      )}
+      <motion.span
+        animate={{
+          display: animate ? (open ? "inline-block" : "none") : "inline-block",
+          opacity: animate ? (open ? 1 : 0) : 1,
+        }}
+        className="text-sm font-medium group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+      >
+        {pending ? "Logging out…" : "Logout"}
+      </motion.span>
+    </button>
+  );
+}
+
 // Logout button component
 function LogoutButton() {
   const { open, animate } = useSidebar();
-
   return (
     <form action={logout}>
-      <button
-        type="submit"
-        className={cn(
-          "flex items-center gap-3 group/sidebar py-3 px-3 rounded-xl transition-all duration-200 text-brand-dark-grey hover:bg-red-50 hover:text-red-600 w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-coral focus-visible:rounded-lg",
-          !open && "justify-center"
-        )}
-      >
-        <LogOut className="h-5 w-5 flex-shrink-0 text-brand-mid-grey group-hover/sidebar:text-red-500 transition-colors" />
-        <motion.span
-          animate={{
-            display: animate ? (open ? "inline-block" : "none") : "inline-block",
-            opacity: animate ? (open ? 1 : 0) : 1,
-          }}
-          className="text-sm font-medium group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
-        >
-          Logout
-        </motion.span>
-      </button>
+      <LogoutButtonInner open={open} animate={animate} />
     </form>
   );
 }
@@ -174,7 +188,7 @@ export function Sidebar() {
 
   return (
     <SidebarWrapper open={open} setOpen={setOpen}>
-      <SidebarBody className="justify-between gap-10 bg-white border-r border-brand-light-grey shadow-sm">
+      <SidebarBody className="justify-between gap-10 bg-white shadow-md">
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           {/* Logo */}
           <div className="mb-8">
@@ -190,7 +204,7 @@ export function Sidebar() {
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col gap-1 border-t border-brand-light-grey/50 pt-4">
+        <div className="flex flex-col gap-1 pt-4">
           <BackToSiteLink />
           <LogoutButton />
         </div>
